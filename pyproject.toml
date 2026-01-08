@@ -13,4 +13,4 @@ authors = [{ name = "Sam Bines" }]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pyloggy*"]
+include = ["loggy*"]
