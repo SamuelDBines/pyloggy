@@ -153,8 +153,10 @@ class Log:
             self.style = STYLES["default"]
 
         # auto-disable in non-tty
-        self.use_color = use_color and _is_tty(stream_out)
-        self.use_icons = use_icons and _is_tty(stream_out)
+        # self.use_color = use_color and _is_tty(stream_out)
+        # self.use_icons = use_icons and _is_tty(stream_out)
+        self.use_color = use_color # and _is_tty(stream_out)
+        self.use_icons = use_icons #and _is_tty(stream_out)
 
         self.out = stream_out
         self.err_stream = stream_err
