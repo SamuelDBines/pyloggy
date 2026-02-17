@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>pyloggy Docs</title>
+    <meta
+      name="description"
+      content="pyloggy documentation: tiny dependency-free Python logger with styled terminal output."
+    />
+    <style>
+      :root {
+        --bg: #0d1117;
+        --panel: #111827;
+        --panel-2: #162033;
+        --text: #e6edf3;
+        --muted: #a0aec0;
+        --accent: #38bdf8;
+        --accent-2: #22c55e;
+        --warn: #fb923c;
+        --err: #f87171;
+        --border: #273244;
+        --code-bg: #0b1220;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 20% -20%, #1e293b, transparent 40%),
+          radial-gradient(circle at 90% 0%, #0f3b4e, transparent 35%),
+          var(--bg);
+        line-height: 1.55;
+      }
+
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 2rem 1rem 4rem;
+      }
+
+      .hero {
+        padding: 2.4rem;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: linear-gradient(145deg, rgba(22, 32, 51, 0.94), rgba(14, 24, 37, 0.94));
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+      }
+
+      h1 {
+        margin: 0 0 0.6rem;
+        font-size: clamp(2rem, 5vw, 3.2rem);
+        line-height: 1.1;
+        letter-spacing: 0.01em;
+      }
+
+      .tagline {
+        margin: 0;
+        color: var(--muted);
+        max-width: 65ch;
+      }
+
+      .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-top: 1.25rem;
+      }
+
+      .badge {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.12);
+        color: #c8eeff;
+        font-size: 0.84rem;
+        padding: 0.36rem 0.75rem;
+      }
+
+      section {
+        margin-top: 1.5rem;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: rgba(17, 24, 39, 0.84);
+        padding: 1.1rem 1.1rem;
+      }
+
+      h2 {
+        margin: 0 0 0.65rem;
+        color: #d8f4ff;
+        font-size: 1.15rem;
+      }
+
+      h3 {
+        margin: 1rem 0 0.45rem;
+        font-size: 1rem;
+        color: #d7ffe4;
+      }
+
+      p,
+      li {
+        color: #d3dce8;
+      }
+
+      code {
+        font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.94em;
+      }
+
+      pre {
+        margin: 0.7rem 0;
+        padding: 0.85rem;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--code-bg);
+        overflow-x: auto;
+      }
+
+      .grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .palette {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 0.55rem;
+      }
+
+      .swatch {
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        padding: 0.6rem;
+        font-size: 0.88rem;
+      }
+
+      .swatch span {
+        display: block;
+        margin-top: 0.25rem;
+        color: var(--muted);
+      }
+
+      .s-ok {
+        background: rgba(34, 197, 94, 0.13);
+        color: #bbf7d0;
+      }
+
+      .s-info {
+        background: rgba(56, 189, 248, 0.13);
+        color: #bae6fd;
+      }
+
+      .s-warn {
+        background: rgba(251, 146, 60, 0.13);
+        color: #fed7aa;
+      }
+
+      .s-err {
+        background: rgba(248, 113, 113, 0.13);
+        color: #fecaca;
+      }
+
+      .foot {
+        margin-top: 1.2rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 700px) {
+        .hero {
+          padding: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="hero">
+        <h1>pyloggy</h1>
+        <p class="tagline">
+          A tiny, dependency-free Python logger for clean CLI output. It gives you readable level prefixes,
+          optional icons, ANSI colors, and simple style presets without pulling in heavy frameworks.
+        </p>
+        <div class="badge-row">
+          <span class="badge">No dependencies</span>
+          <span class="badge">TTY-aware formatting</span>
+          <span class="badge">Reusable package API</span>
+          <span class="badge">GitHub Pages docs</span>
+        </div>
+      </header>
+
+      <section>
+        <h2>What It Does</h2>
+        <ul>
+          <li>Provides five practical methods: <code>log</code>, <code>info</code>, <code>ok</code>, <code>warn</code>, <code>err</code>.</li>
+          <li>Uses style presets to control labels, icons, and color output.</li>
+          <li>Writes normal output to <code>stdout</code> and errors to <code>stderr</code>.</li>
+          <li>Auto-adjusts formatting for terminals and supports color-related env flags.</li>
+        </ul>
+      </section>
+
+      <section class="grid">
+        <h2>Install & Use</h2>
+        <h3>Install</h3>
+        <pre><code>pip install "git+https://github.com/SamuelDBines/pyloggy.git"</code></pre>
+
+        <h3>Quick Start</h3>
+        <pre><code>from loggy import Log
+
+log = Log(debug=True, verbose=True, style="cli")
+log.log("Starting")
+log.info("Loading config")
+log.ok("Ready")
+log.warn("Cache is stale")
+log.err("Connection failed")</code></pre>
+      </section>
+
+      <section>
+        <h2>How It Works</h2>
+        <ul>
+          <li><code>debug=True</code> enables <code>log(...)</code>.</li>
+          <li><code>verbose=True</code> enables <code>info(...)</code> (also enabled by <code>debug=True</code>).</li>
+          <li><code>ok/warn/err</code> are always emitted.</li>
+          <li>Colors are controlled by <code>use_color</code>, TTY detection, <code>NO_COLOR</code>, and <code>FORCE_COLOR</code>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Color Setup</h2>
+        <p>Built-in levels map to straightforward semantic colors:</p>
+        <div class="palette">
+          <div class="swatch s-ok">OK<span>green</span></div>
+          <div class="swatch s-info">Info<span>blue/cyan</span></div>
+          <div class="swatch s-warn">Warn<span>orange</span></div>
+          <div class="swatch s-err">Error<span>red</span></div>
+        </div>
+        <p>
+          For fully plain output in CI or redirected logs, set <code>NO_COLOR=1</code>.
+          To force colors in non-TTY environments, set <code>FORCE_COLOR=1</code>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Reusable Package API</h2>
+        <pre><code>from loggy import Log, LogStyle, STYLES, get_style</code></pre>
+        <p>
+          Start with a preset and override only what you need:
+        </p>
+        <pre><code>from loggy import Log, get_style
+
+style = get_style("cli", warn_label="[warning]", warn_icon="⚠")
+log = Log(style=style)</code></pre>
+      </section>
+
+      <p class="foot">See the repository README for complete package docs and publishing workflow.</p>
+    </main>
+  </body>
+</html>

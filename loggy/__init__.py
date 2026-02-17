@@ -1,9 +1,18 @@
+"""pyloggy: a tiny, dependency-free logger for CLI apps.
+
+The public API is intentionally small:
+- `Log`: logger class with `log/info/ok/warn/err` methods
+- `LogStyle`: immutable style configuration
+- `STYLES`: built-in style presets
+- `get_style`: helper to override a named preset
+"""
+
 from __future__ import annotations
 
 import os
 import sys
 from dataclasses import dataclass, replace
-from typing import Dict, Optional, TextIO, Union
+from typing import Dict, TextIO, Union
 
 
 class bcolors:
@@ -23,6 +32,10 @@ def _is_tty(stream: TextIO) -> bool:
         return stream.isatty()
     except Exception:
         return False
+
+
+def _env_true(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 @dataclass(frozen=True)
@@ -125,6 +138,7 @@ STYLES: Dict[str, LogStyle] = {
 
 
 def get_style(name: str, **overrides) -> LogStyle:
+    """Return a built-in style by name, with optional field overrides."""
     base = STYLES.get(name, STYLES["default"])
     return replace(base, **overrides) if overrides else base
 
@@ -133,6 +147,8 @@ StyleArg = Union[str, LogStyle, None]
 
 
 class Log:
+    """A tiny logger with style presets and optional color/icon output."""
+
     def __init__(
         self,
         debug: bool = False,
@@ -143,7 +159,8 @@ class Log:
         stream_out: TextIO = sys.stdout,
         stream_err: TextIO = sys.stderr,
     ):
-        self.debug = debug or (os.getenv("DEBUG_LOGS", "").lower() in {"1", "true", "yes"})
+        self.debug = debug or _env_true("DEBUG_LOGS")
+        self.verbose = verbose or _env_true("VERBOSE_LOGS")
 
         if isinstance(style, str):
             self.style = get_style(style)
@@ -152,75 +169,81 @@ class Log:
         else:
             self.style = STYLES["default"]
 
-        # auto-disable in non-tty
-        # self.use_color = use_color and _is_tty(stream_out)
-        # self.use_icons = use_icons and _is_tty(stream_out)
-        self.use_color = use_color # and _is_tty(stream_out)
-        self.use_icons = use_icons #and _is_tty(stream_out)
-
         self.out = stream_out
         self.err_stream = stream_err
 
-    def _fmt(self, *msg) -> str:
+        force_color = _env_true("FORCE_COLOR")
+        no_color = "NO_COLOR" in os.environ
+
+        self.use_icons = use_icons and _is_tty(self.out)
+        self._use_color_out = use_color and not no_color and (force_color or _is_tty(self.out))
+        self._use_color_err = use_color and not no_color and (force_color or _is_tty(self.err_stream))
+
+    def _fmt(self, *msg: object) -> str:
         return " ".join(str(m) for m in msg)
 
     def _prefix(self, icon: str, label: str) -> str:
-        label = label.strip()
+        normalized_label = label.strip()
         if self.use_icons and icon:
-            return f"{icon} {label}".strip()
-        return label or ""
+            return f"{icon} {normalized_label}".strip()
+        return normalized_label or ""
 
-    def _write(self, stream: TextIO, prefix: str, color: str, *msg):
+    def _write(self, stream: TextIO, prefix: str, color: str, use_color: bool, *msg: object) -> None:
         text = self._fmt(*msg)
-        if prefix:
-            line = f"{prefix} {text}"
-        else:
-            line = text
+        line = f"{prefix} {text}" if prefix else text
 
-        if self.use_color and color:
+        if use_color and color:
             stream.write(f"{color}{line}{bcolors.ENDC}\n")
         else:
             stream.write(f"{line}\n")
         stream.flush()
 
-    def log(self, *msg):
+    def log(self, *msg: object) -> None:
         if self.debug:
             self._write(
                 self.out,
                 self._prefix(self.style.log_icon, self.style.log_label),
                 self.style.log_color,
+                self._use_color_out,
                 *msg,
             )
 
-    def ok(self, *msg):
+    def ok(self, *msg: object) -> None:
         self._write(
             self.out,
             self._prefix(self.style.ok_icon, self.style.ok_label),
             self.style.ok_color,
+            self._use_color_out,
             *msg,
         )
 
-    def info(self, *msg):
-        if self.debug:
+    def info(self, *msg: object) -> None:
+        if self.debug or self.verbose:
             self._write(
                 self.out,
                 self._prefix(self.style.info_icon, self.style.info_label),
                 self.style.info_color,
+                self._use_color_out,
                 *msg,
             )
 
-    def warn(self, *msg):
+    def warn(self, *msg: object) -> None:
         self._write(
             self.out,
             self._prefix(self.style.warn_icon, self.style.warn_label),
             self.style.warn_color,
+            self._use_color_out,
             *msg,
         )
 
-    def err(self, *msg):
+    def err(self, *msg: object) -> None:
         self._write(
             self.err_stream,
             self._prefix(self.style.err_icon, self.style.err_label),
             self.style.err_color,
+            self._use_color_err,
             *msg,
         )
+
+
+__all__ = ["Log", "LogStyle", "STYLES", "get_style"]
