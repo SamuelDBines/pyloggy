@@ -44,6 +44,23 @@
         padding: 2rem 1rem 4rem;
       }
 
+      .toc {
+        margin: 0 0 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .toc a {
+        color: #d6edff;
+        text-decoration: none;
+        font-size: 0.85rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.3rem 0.65rem;
+        background: rgba(11, 18, 32, 0.75);
+      }
+
       .hero {
         padding: 2.4rem;
         border: 1px solid var(--border);
@@ -120,6 +137,21 @@
         overflow-x: auto;
       }
 
+      .inline-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0;
+        list-style: none;
+      }
+
+      .inline-list li {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.35rem 0.6rem;
+        background: rgba(15, 23, 36, 0.9);
+      }
+
       .grid {
         display: grid;
         gap: 1rem;
@@ -171,14 +203,58 @@
       }
 
       @media (max-width: 700px) {
+        body {
+          font-size: 15px;
+        }
+
+        .wrap {
+          padding: 1rem 0.75rem 2rem;
+        }
+
         .hero {
-          padding: 1.5rem;
+          padding: 1.1rem;
+          border-radius: 14px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        section {
+          padding: 0.9rem;
+          margin-top: 0.95rem;
+        }
+
+        .badge-row {
+          gap: 0.4rem;
+        }
+
+        .badge {
+          font-size: 0.78rem;
+          padding: 0.28rem 0.58rem;
+        }
+
+        pre {
+          font-size: 0.82rem;
+          padding: 0.72rem;
+        }
+
+        .toc a {
+          font-size: 0.78rem;
+          padding: 0.22rem 0.5rem;
         }
       }
     </style>
   </head>
   <body>
     <main class="wrap">
+      <nav class="toc" aria-label="On-page navigation">
+        <a href="#what">What</a>
+        <a href="#install">Install</a>
+        <a href="#how">How</a>
+        <a href="#color">Color</a>
+        <a href="#api">API</a>
+      </nav>
       <header class="hero">
         <h1>pyloggy</h1>
         <p class="tagline">
@@ -193,7 +269,7 @@
         </div>
       </header>
 
-      <section>
+      <section id="what">
         <h2>What It Does</h2>
         <ul>
           <li>Provides five practical methods: <code>log</code>, <code>info</code>, <code>ok</code>, <code>warn</code>, <code>err</code>.</li>
@@ -203,7 +279,7 @@
         </ul>
       </section>
 
-      <section class="grid">
+      <section id="install" class="grid">
         <h2>Install & Use</h2>
         <h3>Install</h3>
         <pre><code>pip install "git+https://github.com/SamuelDBines/pyloggy.git"</code></pre>
@@ -219,7 +295,7 @@ log.warn("Cache is stale")
 log.err("Connection failed")</code></pre>
       </section>
 
-      <section>
+      <section id="how">
         <h2>How It Works</h2>
         <ul>
           <li><code>debug=True</code> enables <code>log(...)</code>.</li>
@@ -229,7 +305,7 @@ log.err("Connection failed")</code></pre>
         </ul>
       </section>
 
-      <section>
+      <section id="color">
         <h2>Color Setup</h2>
         <p>Built-in levels map to straightforward semantic colors:</p>
         <div class="palette">
@@ -244,8 +320,16 @@ log.err("Connection failed")</code></pre>
         </p>
       </section>
 
-      <section>
+      <section id="api">
         <h2>Reusable Package API</h2>
+        <ul class="inline-list">
+          <li><code>default</code></li>
+          <li><code>classic</code></li>
+          <li><code>minimal</code></li>
+          <li><code>cli</code></li>
+          <li><code>emoji</code></li>
+          <li><code>plain</code></li>
+        </ul>
         <pre><code>from loggy import Log, LogStyle, STYLES, get_style</code></pre>
         <p>
           Start with a preset and override only what you need:

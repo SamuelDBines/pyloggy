@@ -36,6 +36,14 @@ log.warn("Retrying stale cache")
 log.err("Connection failed")
 ```
 
+## Pick The Right Method
+
+- `log(...)`: debug-step output (hidden unless debug is enabled)
+- `info(...)`: verbose progress output (hidden unless verbose/debug is enabled)
+- `ok(...)`: success checkpoints
+- `warn(...)`: non-fatal warnings
+- `err(...)`: failures and errors (goes to `stderr`)
+
 ## How It Works
 
 `Log` has two visibility toggles:
@@ -68,6 +76,19 @@ Log(
     stream_out = sys.stdout,
     stream_err = sys.stderr,
 )
+```
+
+### Typical Constructor Setups
+
+```python
+# quiet production defaults
+Log()
+
+# debug-heavy local dev
+Log(debug=True, verbose=True, style="cli")
+
+# CI-safe plain text output
+Log(use_color=False, use_icons=False, style="plain")
 ```
 
 ## Style Presets
@@ -140,3 +161,7 @@ This repository includes:
 - `.github/workflows/pages.yml` (deploy pipeline)
 
 On push to `main`/`master`, GitHub Actions deploys `public/` to Pages.
+
+## Local Docs Preview
+
+Open `public/index.html` directly in your browser to preview docs changes before pushing.
