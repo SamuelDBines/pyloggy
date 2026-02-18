@@ -49,6 +49,13 @@ class ProgressTests(unittest.TestCase):
         self.assertEqual("250ms", Stopwatch.format_seconds(0.25))
         self.assertEqual("2.50s", Stopwatch.format_seconds(2.5))
         self.assertEqual("1m 5.0s", Stopwatch.format_seconds(65.0))
+        self.assertEqual("1h 1m 1.0s", Stopwatch.format_seconds(3661.0))
+
+    def test_lap_matches_elapsed(self):
+        clock = FakeClock()
+        sw = Stopwatch(auto_start=True, clock=clock)
+        clock.advance(0.4)
+        self.assertAlmostEqual(sw.elapsed, sw.lap())
 
     def test_progress_tracker_snapshot_and_render(self):
         clock = FakeClock()
@@ -76,6 +83,27 @@ class ProgressTests(unittest.TestCase):
         self.assertTrue(tracker.complete)
         self.assertEqual(100.0, tracker.percent)
 
+    def test_progress_constructor_current_bounds(self):
+        with self.assertRaises(ValueError):
+            ProgressTracker(total=3, current=-1)
+        with self.assertRaises(ValueError):
+            ProgressTracker(total=3, current=4)
+
+    def test_snapshot_eta_none_until_progress_and_time(self):
+        clock = FakeClock()
+        tracker = ProgressTracker(total=5, clock=clock)
+        snap = tracker.snapshot()
+        self.assertIsNone(snap.eta)
+        self.assertEqual(0.0, snap.rate)
+
+    def test_render_width_is_clamped_to_one(self):
+        clock = FakeClock()
+        tracker = ProgressTracker(total=4, current=2, clock=clock)
+        out = tracker.render(width=0, fill="=", empty=".")
+        self.assertIn("[", out)
+        self.assertIn("]", out)
+        self.assertIn("2/4", out)
+
     def test_progress_limits_and_validation(self):
         with self.assertRaises(ValueError):
             ProgressTracker(total=0)
@@ -99,6 +127,16 @@ class ProgressTests(unittest.TestCase):
         out = time_call(work, clock=clock)
         self.assertEqual("ok", out["result"])
         self.assertAlmostEqual(0.75, out["elapsed"])
+
+    def test_time_call_propagates_exceptions(self):
+        clock = FakeClock()
+
+        def bad():
+            clock.advance(0.2)
+            raise RuntimeError("boom")
+
+        with self.assertRaises(RuntimeError):
+            time_call(bad, clock=clock)
 
 
 if __name__ == "__main__":

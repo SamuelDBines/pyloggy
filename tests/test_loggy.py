@@ -139,6 +139,11 @@ class LoggyTests(unittest.TestCase):
 
     def test_public_api_exports_expected_names(self):
         self.assertTrue({"default", "classic", "minimal", "cli", "emoji", "plain"}.issubset(STYLES.keys()))
+        import loggy
+
+        self.assertIn("ProgressTracker", loggy.__all__)
+        self.assertIn("Stopwatch", loggy.__all__)
+        self.assertIn("time_call", loggy.__all__)
 
     def test_message_parts_are_joined_with_spaces(self):
         log, out, _ = self.make_logger(use_color=False, use_icons=False, style="plain")

@@ -23,7 +23,6 @@ class bcolors:
     ENDC = "\033[0m"
     WARNING_ORANGE = "\033[38;5;208m"
     DIM = "\033[2m"
-    BOLD = "\033[1m"
     CYAN = "\033[96m"
     GRAY = "\033[90m"
 
