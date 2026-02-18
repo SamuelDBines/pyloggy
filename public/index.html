@@ -450,73 +450,23 @@ log.err("Connection failed")</code></pre>
           </div>
           <div class="field">
             <label for="log-color">Log color</label>
-            <select id="log-color">
-              <option value="default" selected>Preset default</option>
-              <option value="dim">Dim</option>
-              <option value="gray">Gray</option>
-              <option value="blue">Blue</option>
-              <option value="cyan">Cyan</option>
-              <option value="green">Green</option>
-              <option value="orange">Orange</option>
-              <option value="red">Red</option>
-              <option value="none">No color</option>
-            </select>
+            <input id="log-color" type="color" value="#94a3b8" />
           </div>
           <div class="field">
             <label for="info-color">Info color</label>
-            <select id="info-color">
-              <option value="default" selected>Preset default</option>
-              <option value="dim">Dim</option>
-              <option value="gray">Gray</option>
-              <option value="blue">Blue</option>
-              <option value="cyan">Cyan</option>
-              <option value="green">Green</option>
-              <option value="orange">Orange</option>
-              <option value="red">Red</option>
-              <option value="none">No color</option>
-            </select>
+            <input id="info-color" type="color" value="#38bdf8" />
           </div>
           <div class="field">
             <label for="ok-color">OK color</label>
-            <select id="ok-color">
-              <option value="default" selected>Preset default</option>
-              <option value="dim">Dim</option>
-              <option value="gray">Gray</option>
-              <option value="blue">Blue</option>
-              <option value="cyan">Cyan</option>
-              <option value="green">Green</option>
-              <option value="orange">Orange</option>
-              <option value="red">Red</option>
-              <option value="none">No color</option>
-            </select>
+            <input id="ok-color" type="color" value="#22c55e" />
           </div>
           <div class="field">
             <label for="warn-color">Warn color</label>
-            <select id="warn-color">
-              <option value="default" selected>Preset default</option>
-              <option value="dim">Dim</option>
-              <option value="gray">Gray</option>
-              <option value="blue">Blue</option>
-              <option value="cyan">Cyan</option>
-              <option value="green">Green</option>
-              <option value="orange">Orange</option>
-              <option value="red">Red</option>
-              <option value="none">No color</option>
-            </select>
+            <input id="warn-color" type="color" value="#fb923c" />
           </div>
           <div class="field">
             <label for="err-color">Error color</label>
-            <select id="err-color">
-              <option value="default" selected>Preset default</option>
-              <option value="dim">Dim</option>
-              <option value="gray">Gray</option>
-              <option value="blue">Blue</option>
-              <option value="cyan">Cyan</option>
-              <option value="green">Green</option>
-              <option value="orange">Orange</option>
-              <option value="red">Red</option>
-              <option value="none">No color</option>
-            </select>
+            <input id="err-color" type="color" value="#ef4444" />
           </div>
         </div>
 
@@ -526,11 +476,12 @@ log.err("Connection failed")</code></pre>
           <label><input id="opt-color" type="checkbox" checked /> use_color=True</label>
           <label><input id="opt-icons" type="checkbox" checked /> use_icons=True</label>
           <label><input id="opt-truecolor" type="checkbox" checked /> truecolor preference</label>
+          <label><input id="opt-custom-colors" type="checkbox" checked /> custom hex colors</label>
         </div>
         <p id="platform-readout" class="builder-meta"></p>
         <p class="tip">
           Truecolor preference sets terminal env hints (`COLORTERM=truecolor` on Linux/macOS, safe defaults on Windows).
-          Color selectors override preset ANSI colors in generated Python code.
+          Color pickers generate `hex_to_ansi(...)` overrides in Python.
         </p>
 
         <div class="btn-row">
@@ -598,6 +549,7 @@ print("done in", Stopwatch.format_seconds(sw.elapsed))</code></pre>
           "opt-color",
           "opt-icons",
           "opt-truecolor",
+          "opt-custom-colors",
         ];
 
         const escapePy = (value) => value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
@@ -638,21 +590,11 @@ print("done in", Stopwatch.format_seconds(sw.elapsed))</code></pre>
           const useColor = $("opt-color").checked;
           const useIcons = $("opt-icons").checked;
           const trueColor = $("opt-truecolor").checked;
+          const customColors = $("opt-custom-colors").checked;
           const pickedPlatform = $("platform-target").value;
           const detected = detectPlatform();
           const targetPlatform = pickedPlatform === "auto" ? detected : pickedPlatform;
           const name = varName();
-
-          const ansiColorExpr = {
-            dim: '"\\033[2m"',
-            gray: '"\\033[90m"',
-            blue: '"\\033[94m"',
-            cyan: '"\\033[96m"',
-            green: '"\\033[92m"',
-            orange: '"\\033[38;5;208m"',
-            red: '"\\033[91m"',
-            none: '""',
-          };
 
           const styleOverrides = [
             [`warn_icon`, `"${escapePy(warnIcon)}"`],
@@ -660,18 +602,13 @@ print("done in", Stopwatch.format_seconds(sw.elapsed))</code></pre>
             [`ok_icon`, `"${escapePy(okIcon)}"`],
             [`ok_label`, `"${escapePy(okLabel)}"`],
           ];
-
-          const addColorOverride = (field, selected) => {
-            if (selected !== "default" && ansiColorExpr[selected]) {
-              styleOverrides.push([field, ansiColorExpr[selected]]);
-            }
-          };
-
-          addColorOverride("log_color", logColor);
-          addColorOverride("info_color", infoColor);
-          addColorOverride("ok_color", okColor);
-          addColorOverride("warn_color", warnColor);
-          addColorOverride("err_color", errColor);
+          if (customColors) {
+            styleOverrides.push(["log_color", `hex_to_ansi("${logColor}")`]);
+            styleOverrides.push(["info_color", `hex_to_ansi("${infoColor}")`]);
+            styleOverrides.push(["ok_color", `hex_to_ansi("${okColor}")`]);
+            styleOverrides.push(["warn_color", `hex_to_ansi("${warnColor}")`]);
+            styleOverrides.push(["err_color", `hex_to_ansi("${errColor}")`]);
+          }
 
           const styleLines = [
             `style = get_style("${preset}",`,
@@ -708,7 +645,7 @@ print("done in", Stopwatch.format_seconds(sw.elapsed))</code></pre>
           const configCode = [
             ...colorEnvLines,
             "",
-            "from loggy import Log, get_style",
+            "from loggy import Log, get_style, hex_to_ansi",
             "",
             ...styleLines,
             "",

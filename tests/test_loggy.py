@@ -2,7 +2,7 @@ import io
 import os
 import unittest
 
-from loggy import Log, LogStyle, STYLES, get_style
+from loggy import Log, LogStyle, STYLES, get_style, hex_to_ansi
 
 
 class FakeStream(io.StringIO):
@@ -186,6 +186,25 @@ class LoggyTests(unittest.TestCase):
         log, _, err = self.make_logger(use_color=True, use_icons=False, stream_err=err)
         log.err("boom")
         self.assertIn("\033[", err.getvalue())
+
+    def test_hex_to_ansi_supports_long_and_short_hex(self):
+        self.assertEqual("\033[38;2;51;204;255m", hex_to_ansi("#33ccff"))
+        self.assertEqual("\033[38;2;170;187;204m", hex_to_ansi("abc"))
+
+    def test_hex_to_ansi_rejects_invalid_values(self):
+        with self.assertRaises(ValueError):
+            hex_to_ansi("xyz")
+        with self.assertRaises(ValueError):
+            hex_to_ansi("#12")
+
+    def test_hex_style_colors_are_applied(self):
+        os.environ["FORCE_COLOR"] = "1"
+        style = get_style("plain", ok_color="#12abef", ok_label="[OK]")
+        log, out, _ = self.make_logger(use_color=True, use_icons=False, style=style)
+        log.ok("paint")
+        rendered = out.getvalue()
+        self.assertIn("\033[38;2;18;171;239m", rendered)
+        self.assertIn("[OK] paint", rendered)
 
 
 if __name__ == "__main__":

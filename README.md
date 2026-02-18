@@ -133,12 +133,13 @@ log = Log(style="minimal")
 Customize a preset with `get_style`:
 
 ```python
-from loggy import Log, get_style
+from loggy import Log, get_style, hex_to_ansi
 
 custom = get_style(
     "cli",
     warn_icon="⚠",
     warn_label="[warning]",
+    warn_color=hex_to_ansi("#ff8a00"),
 )
 log = Log(style=custom)
 ```

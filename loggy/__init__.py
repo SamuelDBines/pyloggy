@@ -11,6 +11,7 @@ The public API is intentionally small:
 from __future__ import annotations
 
 import os
+import re
 import sys
 from dataclasses import dataclass, replace
 from typing import Dict, TextIO, Union
@@ -36,6 +37,46 @@ def _is_tty(stream: TextIO) -> bool:
 
 def _env_true(name: str) -> bool:
     return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+_HEX_COLOR_RE = re.compile(r"^#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
+
+
+def hex_to_ansi(hex_color: str) -> str:
+    """Convert a hex color (e.g. #33ccff) into a 24-bit ANSI foreground code."""
+    value = hex_color.strip()
+    if not _HEX_COLOR_RE.match(value):
+        raise ValueError(f"Invalid hex color: {hex_color!r}")
+    if value.startswith("#"):
+        value = value[1:]
+    if len(value) == 3:
+        value = "".join(ch * 2 for ch in value)
+    r = int(value[0:2], 16)
+    g = int(value[2:4], 16)
+    b = int(value[4:6], 16)
+    return f"\033[38;2;{r};{g};{b}m"
+
+
+def _resolve_color_value(color: str) -> str:
+    color = color.strip()
+    if not color:
+        return color
+    if color.startswith("\033["):
+        return color
+    if _HEX_COLOR_RE.match(color):
+        return hex_to_ansi(color)
+    return color
+
+
+def _resolve_style_colors(style: "LogStyle") -> "LogStyle":
+    return replace(
+        style,
+        log_color=_resolve_color_value(style.log_color),
+        ok_color=_resolve_color_value(style.ok_color),
+        info_color=_resolve_color_value(style.info_color),
+        warn_color=_resolve_color_value(style.warn_color),
+        err_color=_resolve_color_value(style.err_color),
+    )
 
 
 @dataclass(frozen=True)
@@ -163,11 +204,11 @@ class Log:
         self.verbose = verbose or _env_true("VERBOSE_LOGS")
 
         if isinstance(style, str):
-            self.style = get_style(style)
+            self.style = _resolve_style_colors(get_style(style))
         elif isinstance(style, LogStyle):
-            self.style = style
+            self.style = _resolve_style_colors(style)
         else:
-            self.style = STYLES["default"]
+            self.style = _resolve_style_colors(STYLES["default"])
 
         self.out = stream_out
         self.err_stream = stream_err
@@ -248,4 +289,14 @@ class Log:
 
 from .progress import ProgressSnapshot, ProgressTracker, Stopwatch, time_call
 
-__all__ = ["Log", "LogStyle", "STYLES", "get_style", "ProgressSnapshot", "ProgressTracker", "Stopwatch", "time_call"]
+__all__ = [
+    "Log",
+    "LogStyle",
+    "STYLES",
+    "get_style",
+    "hex_to_ansi",
+    "ProgressSnapshot",
+    "ProgressTracker",
+    "Stopwatch",
+    "time_call",
+]
