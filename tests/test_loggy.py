@@ -140,6 +140,48 @@ class LoggyTests(unittest.TestCase):
     def test_public_api_exports_expected_names(self):
         self.assertTrue({"default", "classic", "minimal", "cli", "emoji", "plain"}.issubset(STYLES.keys()))
 
+    def test_message_parts_are_joined_with_spaces(self):
+        log, out, _ = self.make_logger(use_color=False, use_icons=False, style="plain")
+        log.ok("a", 2, "c")
+        self.assertEqual("[OK] a 2 c\n", out.getvalue())
+
+    def test_plain_style_is_unprefixed(self):
+        style = get_style("plain", ok_label="", warn_label="", err_label="")
+        log, out, err = self.make_logger(use_color=False, use_icons=False, style=style)
+        log.ok("clean")
+        log.warn("warn")
+        log.err("err")
+        self.assertEqual("clean\nwarn\n", out.getvalue())
+        self.assertEqual("err\n", err.getvalue())
+
+    def test_use_icons_false_hides_icons_even_on_tty(self):
+        out = FakeStream(is_tty=True)
+        log, out, _ = self.make_logger(use_color=False, use_icons=False, stream_out=out)
+        log.ok("done")
+        self.assertEqual("[OK] done\n", out.getvalue())
+
+    def test_label_is_trimmed_in_prefix(self):
+        style = LogStyle(ok_icon="", ok_label="  [GOOD]  ")
+        log, out, _ = self.make_logger(use_color=False, use_icons=False, style=style)
+        log.ok("done")
+        self.assertEqual("[GOOD] done\n", out.getvalue())
+
+    def test_color_flags_are_stream_specific(self):
+        out = FakeStream(is_tty=False)
+        err = FakeStream(is_tty=True)
+        log, out, err = self.make_logger(use_color=True, use_icons=False, stream_out=out, stream_err=err)
+        log.ok("out")
+        log.err("err")
+        self.assertNotIn("\033[", out.getvalue())
+        self.assertIn("\033[", err.getvalue())
+
+    def test_force_color_applies_to_error_stream_when_not_tty(self):
+        os.environ["FORCE_COLOR"] = "1"
+        err = FakeStream(is_tty=False)
+        log, _, err = self.make_logger(use_color=True, use_icons=False, stream_err=err)
+        log.err("boom")
+        self.assertIn("\033[", err.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()
