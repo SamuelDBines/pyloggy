@@ -157,6 +157,66 @@
         gap: 1rem;
       }
 
+      .builder-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+      }
+
+      .field {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .field label {
+        color: #c8d5e6;
+        font-size: 0.84rem;
+      }
+
+      .field input,
+      .field select {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: rgba(9, 15, 26, 0.9);
+        color: var(--text);
+        padding: 0.46rem 0.55rem;
+        font-family: inherit;
+      }
+
+      .toggle-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .toggle-row label {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: #dff5ff;
+        background: linear-gradient(180deg, rgba(21, 45, 69, 0.95), rgba(15, 33, 51, 0.95));
+        padding: 0.44rem 0.72rem;
+        font-family: inherit;
+        cursor: pointer;
+      }
+
+      #builder-status {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
       .palette {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -243,6 +303,10 @@
           font-size: 0.78rem;
           padding: 0.22rem 0.5rem;
         }
+
+        .builder-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -253,6 +317,7 @@
         <a href="#install">Install</a>
         <a href="#how">How</a>
         <a href="#color">Color</a>
+        <a href="#builder">Builder</a>
         <a href="#api">API</a>
       </nav>
       <header class="hero">
@@ -320,6 +385,60 @@ log.err("Connection failed")</code></pre>
         </p>
       </section>
 
+      <section id="builder">
+        <h2>Config Builder</h2>
+        <p>Pick your setup and generate copy/paste code.</p>
+
+        <div class="builder-grid">
+          <div class="field">
+            <label for="preset">Base preset</label>
+            <select id="preset">
+              <option value="default">default</option>
+              <option value="classic">classic</option>
+              <option value="minimal">minimal</option>
+              <option value="cli" selected>cli</option>
+              <option value="emoji">emoji</option>
+              <option value="plain">plain</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="var-name">Variable name</label>
+            <input id="var-name" value="log" />
+          </div>
+          <div class="field">
+            <label for="warn-icon">Warn icon</label>
+            <input id="warn-icon" value="⚠" />
+          </div>
+          <div class="field">
+            <label for="warn-label">Warn label</label>
+            <input id="warn-label" value="[warning]" />
+          </div>
+          <div class="field">
+            <label for="ok-icon">OK icon</label>
+            <input id="ok-icon" value="✔" />
+          </div>
+          <div class="field">
+            <label for="ok-label">OK label</label>
+            <input id="ok-label" value="[ok]" />
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <label><input id="opt-debug" type="checkbox" /> debug=True</label>
+          <label><input id="opt-verbose" type="checkbox" /> verbose=True</label>
+          <label><input id="opt-color" type="checkbox" checked /> use_color=True</label>
+          <label><input id="opt-icons" type="checkbox" checked /> use_icons=True</label>
+        </div>
+
+        <div class="btn-row">
+          <button id="copy-config" type="button">Copy config code</button>
+          <button id="copy-demo" type="button">Copy demo snippet</button>
+        </div>
+        <p id="builder-status">Code updates live as you edit.</p>
+
+        <pre><code id="generated-config"></code></pre>
+      </section>
+
       <section id="api">
         <h2>Reusable Package API</h2>
         <ul class="inline-list">
@@ -342,5 +461,103 @@ log = Log(style=style)</code></pre>
 
       <p class="foot">See the repository README for complete package docs and publishing workflow.</p>
     </main>
+    <script>
+      (function () {
+        const $ = (id) => document.getElementById(id);
+        const ids = [
+          "preset",
+          "var-name",
+          "warn-icon",
+          "warn-label",
+          "ok-icon",
+          "ok-label",
+          "opt-debug",
+          "opt-verbose",
+          "opt-color",
+          "opt-icons",
+        ];
+
+        const escapePy = (value) => value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+        const varName = () => {
+          const raw = $("var-name").value.trim() || "log";
+          const cleaned = raw.replace(/[^a-zA-Z0-9_]/g, "_");
+          return /^[a-zA-Z_]/.test(cleaned) ? cleaned : `_${cleaned}`;
+        };
+
+        const buildCode = () => {
+          const preset = $("preset").value;
+          const warnIcon = $("warn-icon").value;
+          const warnLabel = $("warn-label").value;
+          const okIcon = $("ok-icon").value;
+          const okLabel = $("ok-label").value;
+          const debug = $("opt-debug").checked;
+          const verbose = $("opt-verbose").checked;
+          const useColor = $("opt-color").checked;
+          const useIcons = $("opt-icons").checked;
+          const name = varName();
+
+          const styleLines = [
+            `style = get_style("${preset}",`,
+            `    warn_icon="${escapePy(warnIcon)}",`,
+            `    warn_label="${escapePy(warnLabel)}",`,
+            `    ok_icon="${escapePy(okIcon)}",`,
+            `    ok_label="${escapePy(okLabel)}",`,
+            `)`,
+          ];
+
+          const initParts = [
+            `style=style`,
+            `debug=${debug ? "True" : "False"}`,
+            `verbose=${verbose ? "True" : "False"}`,
+            `use_color=${useColor ? "True" : "False"}`,
+            `use_icons=${useIcons ? "True" : "False"}`,
+          ];
+
+          const configCode = [
+            "from loggy import Log, get_style",
+            "",
+            ...styleLines,
+            "",
+            `${name} = Log(${initParts.join(", ")})`,
+          ].join("\n");
+
+          const demoCode = [
+            configCode,
+            "",
+            `${name}.log("Starting")`,
+            `${name}.info("Loading config")`,
+            `${name}.ok("Ready")`,
+            `${name}.warn("Potential issue")`,
+            `${name}.err("Something failed")`,
+          ].join("\n");
+
+          return { configCode, demoCode };
+        };
+
+        const render = () => {
+          $("generated-config").textContent = buildCode().configCode;
+        };
+
+        const copyText = async (text) => {
+          const status = $("builder-status");
+          try {
+            await navigator.clipboard.writeText(text);
+            status.textContent = "Copied to clipboard.";
+          } catch (err) {
+            status.textContent = "Clipboard unavailable. Copy manually from the code block.";
+          }
+        };
+
+        ids.forEach((id) => {
+          $(id).addEventListener("input", render);
+          $(id).addEventListener("change", render);
+        });
+
+        $("copy-config").addEventListener("click", () => copyText(buildCode().configCode));
+        $("copy-demo").addEventListener("click", () => copyText(buildCode().demoCode));
+
+        render();
+      })();
+    </script>
   </body>
 </html>
