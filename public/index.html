@@ -448,6 +448,76 @@ log.err("Connection failed")</code></pre>
               <option value="mac">macOS</option>
             </select>
           </div>
+          <div class="field">
+            <label for="log-color">Log color</label>
+            <select id="log-color">
+              <option value="default" selected>Preset default</option>
+              <option value="dim">Dim</option>
+              <option value="gray">Gray</option>
+              <option value="blue">Blue</option>
+              <option value="cyan">Cyan</option>
+              <option value="green">Green</option>
+              <option value="orange">Orange</option>
+              <option value="red">Red</option>
+              <option value="none">No color</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="info-color">Info color</label>
+            <select id="info-color">
+              <option value="default" selected>Preset default</option>
+              <option value="dim">Dim</option>
+              <option value="gray">Gray</option>
+              <option value="blue">Blue</option>
+              <option value="cyan">Cyan</option>
+              <option value="green">Green</option>
+              <option value="orange">Orange</option>
+              <option value="red">Red</option>
+              <option value="none">No color</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ok-color">OK color</label>
+            <select id="ok-color">
+              <option value="default" selected>Preset default</option>
+              <option value="dim">Dim</option>
+              <option value="gray">Gray</option>
+              <option value="blue">Blue</option>
+              <option value="cyan">Cyan</option>
+              <option value="green">Green</option>
+              <option value="orange">Orange</option>
+              <option value="red">Red</option>
+              <option value="none">No color</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="warn-color">Warn color</label>
+            <select id="warn-color">
+              <option value="default" selected>Preset default</option>
+              <option value="dim">Dim</option>
+              <option value="gray">Gray</option>
+              <option value="blue">Blue</option>
+              <option value="cyan">Cyan</option>
+              <option value="green">Green</option>
+              <option value="orange">Orange</option>
+              <option value="red">Red</option>
+              <option value="none">No color</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="err-color">Error color</label>
+            <select id="err-color">
+              <option value="default" selected>Preset default</option>
+              <option value="dim">Dim</option>
+              <option value="gray">Gray</option>
+              <option value="blue">Blue</option>
+              <option value="cyan">Cyan</option>
+              <option value="green">Green</option>
+              <option value="orange">Orange</option>
+              <option value="red">Red</option>
+              <option value="none">No color</option>
+            </select>
+          </div>
         </div>
 
         <div class="toggle-row">
@@ -460,6 +530,7 @@ log.err("Connection failed")</code></pre>
         <p id="platform-readout" class="builder-meta"></p>
         <p class="tip">
           Truecolor preference sets terminal env hints (`COLORTERM=truecolor` on Linux/macOS, safe defaults on Windows).
+          Color selectors override preset ANSI colors in generated Python code.
         </p>
 
         <div class="btn-row">
@@ -517,6 +588,11 @@ print("done in", Stopwatch.format_seconds(sw.elapsed))</code></pre>
           "ok-icon",
           "ok-label",
           "platform-target",
+          "log-color",
+          "info-color",
+          "ok-color",
+          "warn-color",
+          "err-color",
           "opt-debug",
           "opt-verbose",
           "opt-color",
@@ -552,6 +628,11 @@ print("done in", Stopwatch.format_seconds(sw.elapsed))</code></pre>
           const warnLabel = $("warn-label").value;
           const okIcon = $("ok-icon").value;
           const okLabel = $("ok-label").value;
+          const logColor = $("log-color").value;
+          const infoColor = $("info-color").value;
+          const okColor = $("ok-color").value;
+          const warnColor = $("warn-color").value;
+          const errColor = $("err-color").value;
           const debug = $("opt-debug").checked;
           const verbose = $("opt-verbose").checked;
           const useColor = $("opt-color").checked;
@@ -562,12 +643,39 @@ print("done in", Stopwatch.format_seconds(sw.elapsed))</code></pre>
           const targetPlatform = pickedPlatform === "auto" ? detected : pickedPlatform;
           const name = varName();
 
+          const ansiColorExpr = {
+            dim: '"\\033[2m"',
+            gray: '"\\033[90m"',
+            blue: '"\\033[94m"',
+            cyan: '"\\033[96m"',
+            green: '"\\033[92m"',
+            orange: '"\\033[38;5;208m"',
+            red: '"\\033[91m"',
+            none: '""',
+          };
+
+          const styleOverrides = [
+            [`warn_icon`, `"${escapePy(warnIcon)}"`],
+            [`warn_label`, `"${escapePy(warnLabel)}"`],
+            [`ok_icon`, `"${escapePy(okIcon)}"`],
+            [`ok_label`, `"${escapePy(okLabel)}"`],
+          ];
+
+          const addColorOverride = (field, selected) => {
+            if (selected !== "default" && ansiColorExpr[selected]) {
+              styleOverrides.push([field, ansiColorExpr[selected]]);
+            }
+          };
+
+          addColorOverride("log_color", logColor);
+          addColorOverride("info_color", infoColor);
+          addColorOverride("ok_color", okColor);
+          addColorOverride("warn_color", warnColor);
+          addColorOverride("err_color", errColor);
+
           const styleLines = [
             `style = get_style("${preset}",`,
-            `    warn_icon="${escapePy(warnIcon)}",`,
-            `    warn_label="${escapePy(warnLabel)}",`,
-            `    ok_icon="${escapePy(okIcon)}",`,
-            `    ok_label="${escapePy(okLabel)}",`,
+            ...styleOverrides.map(([name, value]) => `    ${name}=${value},`),
             `)`,
           ];
 
