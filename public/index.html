@@ -183,6 +183,30 @@
         font-family: inherit;
       }
 
+      .color-control {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.45rem;
+        align-items: center;
+      }
+
+      .color-swatch {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .color-picker-hidden {
+        position: absolute;
+        width: 0;
+        height: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
       .toggle-row {
         display: flex;
         gap: 1rem;
@@ -450,23 +474,43 @@ log.err("Connection failed")</code></pre>
           </div>
           <div class="field">
             <label for="log-color">Log color</label>
-            <input id="log-color" type="color" value="#94a3b8" />
+            <div class="color-control">
+              <input id="log-color" value="#94a3b8" />
+              <button id="log-color-swatch" class="color-swatch" type="button" aria-label="Pick log color"></button>
+              <input id="log-color-picker" class="color-picker-hidden" type="color" value="#94a3b8" />
+            </div>
           </div>
           <div class="field">
             <label for="info-color">Info color</label>
-            <input id="info-color" type="color" value="#38bdf8" />
+            <div class="color-control">
+              <input id="info-color" value="#38bdf8" />
+              <button id="info-color-swatch" class="color-swatch" type="button" aria-label="Pick info color"></button>
+              <input id="info-color-picker" class="color-picker-hidden" type="color" value="#38bdf8" />
+            </div>
           </div>
           <div class="field">
             <label for="ok-color">OK color</label>
-            <input id="ok-color" type="color" value="#22c55e" />
+            <div class="color-control">
+              <input id="ok-color" value="#22c55e" />
+              <button id="ok-color-swatch" class="color-swatch" type="button" aria-label="Pick ok color"></button>
+              <input id="ok-color-picker" class="color-picker-hidden" type="color" value="#22c55e" />
+            </div>
           </div>
           <div class="field">
             <label for="warn-color">Warn color</label>
-            <input id="warn-color" type="color" value="#fb923c" />
+            <div class="color-control">
+              <input id="warn-color" value="#fb923c" />
+              <button id="warn-color-swatch" class="color-swatch" type="button" aria-label="Pick warn color"></button>
+              <input id="warn-color-picker" class="color-picker-hidden" type="color" value="#fb923c" />
+            </div>
           </div>
           <div class="field">
             <label for="err-color">Error color</label>
-            <input id="err-color" type="color" value="#ef4444" />
+            <div class="color-control">
+              <input id="err-color" value="#ef4444" />
+              <button id="err-color-swatch" class="color-swatch" type="button" aria-label="Pick error color"></button>
+              <input id="err-color-picker" class="color-picker-hidden" type="color" value="#ef4444" />
+            </div>
           </div>
         </div>
 
@@ -553,6 +597,18 @@ print("done in", Stopwatch.format_seconds(sw.elapsed))</code></pre>
         ];
 
         const escapePy = (value) => value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+        const normalizeHex = (value) => {
+          const raw = value.trim();
+          const withHash = raw.startsWith("#") ? raw : `#${raw}`;
+          const short = /^#([0-9a-fA-F]{3})$/;
+          const long = /^#([0-9a-fA-F]{6})$/;
+          if (long.test(withHash)) return withHash.toLowerCase();
+          if (short.test(withHash)) {
+            const m = short.exec(withHash)[1];
+            return `#${m[0]}${m[0]}${m[1]}${m[1]}${m[2]}${m[2]}`.toLowerCase();
+          }
+          return null;
+        };
         const detectPlatform = () => {
           const raw = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "").toLowerCase();
           if (raw.includes("win")) return "windows";
@@ -665,6 +721,34 @@ print("done in", Stopwatch.format_seconds(sw.elapsed))</code></pre>
           return { configCode, demoCode, detected, targetPlatform };
         };
 
+        const wireColorControl = (baseId) => {
+          const input = $(`${baseId}`);
+          const swatch = $(`${baseId}-swatch`);
+          const picker = $(`${baseId}-picker`);
+
+          const setColor = (value, source) => {
+            const hex = normalizeHex(value);
+            if (!hex) return;
+            if (source !== "input") input.value = hex;
+            if (source !== "picker") picker.value = hex;
+            swatch.style.backgroundColor = hex;
+            render();
+          };
+
+          swatch.addEventListener("click", () => picker.click());
+          picker.addEventListener("input", () => setColor(picker.value, "picker"));
+          input.addEventListener("change", () => setColor(input.value, "input"));
+          input.addEventListener("blur", () => {
+            const hex = normalizeHex(input.value);
+            if (hex) {
+              input.value = hex;
+              setColor(hex, "input");
+            }
+          });
+
+          setColor(input.value, "input");
+        };
+
         const render = () => {
           const built = buildCode();
           $("generated-config").textContent = built.configCode;
@@ -689,6 +773,8 @@ print("done in", Stopwatch.format_seconds(sw.elapsed))</code></pre>
 
         $("copy-config").addEventListener("click", () => copyText(buildCode().configCode));
         $("copy-demo").addEventListener("click", () => copyText(buildCode().demoCode));
+
+        ["log-color", "info-color", "ok-color", "warn-color", "err-color"].forEach(wireColorControl);
 
         render();
       })();
