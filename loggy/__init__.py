@@ -5,6 +5,7 @@ The public API is intentionally small:
 - `LogStyle`: immutable style configuration
 - `STYLES`: built-in style presets
 - `get_style`: helper to override a named preset
+- `Stopwatch` / `ProgressTracker`: timing and progress helpers
 """
 
 from __future__ import annotations
@@ -246,4 +247,6 @@ class Log:
         )
 
 
-__all__ = ["Log", "LogStyle", "STYLES", "get_style"]
+from .progress import ProgressSnapshot, ProgressTracker, Stopwatch, time_call
+
+__all__ = ["Log", "LogStyle", "STYLES", "get_style", "ProgressSnapshot", "ProgressTracker", "Stopwatch", "time_call"]

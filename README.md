@@ -4,6 +4,7 @@
 
 It focuses on practical terminal output:
 - level methods: `log`, `info`, `ok`, `warn`, `err`
+- stopwatch and progress helpers (`Stopwatch`, `ProgressTracker`)
 - style presets (labels, icons, colors)
 - auto TTY behavior (no ANSI noise in redirected logs)
 - stream-aware output (`stdout` for normal logs, `stderr` for errors)
@@ -43,6 +44,26 @@ log.err("Connection failed")
 - `ok(...)`: success checkpoints
 - `warn(...)`: non-fatal warnings
 - `err(...)`: failures and errors (goes to `stderr`)
+
+## Timers And Progress
+
+```python
+from loggy import ProgressTracker, Stopwatch
+
+with Stopwatch() as sw:
+    tracker = ProgressTracker(total=5)
+    for _ in range(5):
+        tracker.advance()
+        print(tracker.render(width=16))
+
+print("done in", Stopwatch.format_seconds(sw.elapsed))
+```
+
+`ProgressTracker` gives you:
+- `advance(...)` / `set(...)`
+- `percent` and `complete`
+- `snapshot()` (elapsed, rate, eta)
+- `render(...)` for a CLI progress bar string
 
 ## How It Works
 
@@ -136,6 +157,9 @@ Note: `NO_COLOR` takes priority over `FORCE_COLOR`.
 
 ```python
 from loggy import Log, LogStyle, STYLES, get_style
+
+# New utility APIs:
+from loggy import ProgressSnapshot, ProgressTracker, Stopwatch, time_call
 ```
 
 ## Reusable Package Workflow
